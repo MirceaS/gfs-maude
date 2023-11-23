@@ -1,0 +1,33 @@
+mod FILE is
+    pr NAT .
+    pr QID .
+    pr STRING .
+
+    sort FilePath .
+    subsort String < FilePath .
+    var P : FilePath .
+
+    sort Chunk .
+    subsort Nat < Chunk .
+
+    sort Chunks .
+    subsort Chunk < Chunks .
+    op empty-chunks : -> Chunks [ctor] .
+    op _,_ : Chunks Chunks -> Chunks [ctor assoc id: empty-chunks] .
+    var C : Chunks .
+
+    sort ChunkId .
+    op chunk-id : Chunk -> ChunkId .
+
+    sort ChunkIds .
+    subsort ChunkId < ChunkIds .
+    op empty-chunk-ids : -> ChunkIds [ctor] .
+    op _,_ : ChunkIds ChunkIds -> ChunkIds [ctor assoc id: empty-chunk-ids] .
+
+    sort File .
+    op file : FilePath Chunks -> File [ctor] .
+    op file-path : File -> FilePath .
+    eq file-path(file(P, C)) = P .
+    op file-chunks : File -> Chunks .
+    eq file-chunks(file(P, C)) = C .
+endm

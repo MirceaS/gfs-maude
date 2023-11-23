@@ -1,0 +1,12 @@
+omod MASTER is
+    pr FILE .
+    pr SERVER . 
+
+    sort MasterConfig .
+    op master-chunk-locations : ChunkId ChunkSerLocs -> MasterConfig [ctor] .
+    op master-file-registry : FilePath ChunkIds -> MasterConfig [ctor] .
+
+
+
+    class Master | file-registry : MasterFileRegistry,  .
+endom

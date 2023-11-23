@@ -1,16 +1,17 @@
+load ./file
+
 omod GFS is
     protecting BOOL .
     protecting NAT .
     protecting STRING .
     protecting QID .
     protecting LIST{Nat} .
-    protecting MAP{Qid, Nat} * (sort Map{Qid, Nat} to Map1 , op _->_ to _->1_) .
+    protecting MAP{Qid, Nat} .
 
-    sort File .
-    op file : String List{Nat} -> File [ctor] .
+    pr FILE .
 
     class ChunkServer | address : Nat , chunk-record : Map1 .
-    --- class Master | chunk-locations : Map{Qid, List{Nat}} , leases : Map1 .
+    class Master | chunk-locations : Map{Qid, List{Nat}} , leases : Map1 .
 
     --- Client messages
     msg write : File -> Msg .

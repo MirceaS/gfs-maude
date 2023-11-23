@@ -1,0 +1,14 @@
+mod SERVER is
+    pr NAT .
+
+    sort ChunkSerLoc .
+    subsort Nat < ChunkSerLoc .
+
+    sort ChunkSerLocs .
+    subsort ChunkSerLoc < ChunkSerLocs .
+    op empty-chunk-ser-locs : -> ChunkSerLocs [ctor] .
+    op _,_ : ChunkSerLocs ChunkSerLocs -> ChunkSerLocs [ctor assoc id: empty-chunk-ser-locs] .
+
+
+
+endm
