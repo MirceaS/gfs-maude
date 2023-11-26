@@ -1,14 +1,15 @@
+load ./component
+load ./message
+
 omod MASTER is
-    pr FILE .
-    pr SERVER . 
+    pr COMPONENT .
+    pr MESSAGE . 
 
     sort MasterConfig .
     op empty-master-config : -> MasterConfig [ctor] .
     op _ _ : MasterConfig MasterConfig -> MasterConfig [ctor assoc comm idem id: empty-master-config] .
     op master-chunk-location : ChunkId Oid -> MasterConfig [ctor] .
     op master-file-registry : FilePath ChunkIds -> MasterConfig [ctor] .
-
-    op master : -> Oid [ctor]
 
     class Master | config : MasterConfig .
 

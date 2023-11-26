@@ -1,0 +1,8 @@
+mod COMPONENT is
+    pr NAT .
+
+    op master : -> Oid [ctor] .
+    op server : Nat -> Oid [ctor] .
+    op client : Nat -> Oid [ctor] .
+
+endm

@@ -1,13 +1,14 @@
+load ./component
+load ./message
+
 omod SERVER is
+    pr COMPONENT .
     pr MESSAGE .
-    pr NAT .
 
     sort ServerConfig .
     op empty-server-config : -> ServerConfig [ctor] .
     op _ _ : ServerConfig ServerConfig -> ServerConfig [ctor assoc comm idem id: empty-server-config] .
     op server-chunk-record : ChunkId Chunk -> ServerConfig .
-
-    op server : Nat -> Oid [ctor] .
 
     class Server | config : ServerConfig .
 
