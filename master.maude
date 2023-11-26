@@ -14,11 +14,29 @@ omod MASTER is
     class Master | config : MasterConfig .
 
     var N : Nat .
+    vars OID OID2 : Oid .
+    var PATH : FilePath .
     var CHUNKID : ChunkId .
+    var CHUNKIDS : ChunkIds .
+    var CHUNKIDSET : ChunkIdSet .
     var MASTERCONFIG : MasterConfig .
 
+    op expand-heartbeat : Oid ChunkIdSet -> MasterConfig .
+    eq expand-heartbeat(server(N), CHUNKID CHUNKIDSET) = master-chunk-location(CHUNKID, server(N)) expand-heartbeat(server(N), CHUNKIDSET) .
+
     rl [process-heartbeat] :
-        (from server(N) to master is heartbeat-master(CHUNKID))
+        (from server(N) to master send heartbeat-master(CHUNKIDSET))
         < master : Master | config : MASTERCONFIG > =>
-        < master : Master | config : MASTERCONFIG master-chunk-location(CHUNKID, server(N)) > .
+        < master : Master | config : MASTERCONFIG expand-heartbeat(server(N), CHUNKIDSET) > .
+
+    op build-chunk-info : Oid MasterConfig -> Configuration .
+    eq build-chunk-info(OID, MASTERCONFIG master-chunk-location(CHUNKID, OID2)) = (from master to OID send master-chunk-location-reply(CHUNKID, OID2)) build-chunk-info(OID, MASTERCONFIG) .
+    eq build-chunk-info(OID, MASTERCONFIG) = <> [owise] .
+
+    rl [reply-read-file] :
+        (from client(N) to master send client-read-file(PATH))
+        < master : Master | config : MASTERCONFIG master-file-registry(PATH, CHUNKIDS) > =>
+        < master : Master | >
+        (from master to client(N) send master-read-file-reply(PATH, CHUNKIDS))
+        build-chunk-info(client(N), MASTERCONFIG) .
 endom

@@ -6,7 +6,17 @@ mod MESSAGE is
 
     sort MsgBody .
 
-    op heartbeat-master : ChunkId -> MsgBody .
+    --- Sent by the Client
+    op client-read-file : FilePath -> MsgBody .
+    op client-chunk-data-request : ChunkId -> MsgBody .
 
-    op from_to_is_ : Oid Oid MsgBody -> Msg [ctor] .
+    --- Sent by the Master
+    op master-read-file-reply : FilePath ChunkIds -> MsgBody .
+    op master-chunk-location-reply : ChunkId Oid -> MsgBody .
+
+    --- Sent by the Server
+    op heartbeat-master : ChunkIdSet -> MsgBody .
+    op server-chunk-data-reply : ChunkId Chunk -> MsgBody .
+
+    op from_to_send_ : Oid Oid MsgBody -> Msg [ctor] .
 endm

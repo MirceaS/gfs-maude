@@ -12,14 +12,25 @@ omod SERVER is
 
     class Server | config : ServerConfig .
 
-    var N : Nat .
+    vars N M : Nat .
     var CHUNKID : ChunkId .
     var CHUNK : Chunk .
     var SERVERCONFIG : ServerConfig .
 
+    op collect-chunk-ids : ServerConfig -> ChunkIdSet .
+    eq collect-chunk-ids(server-chunk-record(CHUNKID, CHUNK) SERVERCONFIG) = CHUNKID collect-chunk-ids(SERVERCONFIG) .
+    eq collect-chunk-ids(SERVERCONFIG) = empty-chunk-id-set [owise] .
+
     rl [heartbeat] :
-        < server(N) : Server | config : SERVERCONFIG server-chunk-record(CHUNKID, CHUNK) > =>
-        < server(N) : Server | config : SERVERCONFIG server-chunk-record(CHUNKID, CHUNK) >
-        (from server(N) to master is heartbeat-master(CHUNKID)) .
+        < server(N) : Server | config : SERVERCONFIG > =>
+        < server(N) : Server | >
+        (from server(N) to master send heartbeat-master(collect-chunk-ids(SERVERCONFIG))) .
+    
+    rl [reply-chunk-data]:
+        (from client(N) to server(M) send client-chunk-data-request(CHUNKID))
+        < server(N) : Server | config : server-chunk-record(CHUNKID, CHUNK) SERVERCONFIG > =>
+        < server(N) : Server | >
+        (from server(M) to client(N) send server-chunk-data-reply(CHUNKID, CHUNK)) .
+
 
 endom

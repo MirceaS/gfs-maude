@@ -1,0 +1,60 @@
+load ./component
+load ./message
+
+omod CLIENT is
+    pr COMPONENT .
+    pr MESSAGE .
+
+    sort PartialChunks .
+    subsort ChunkId < PartialChunks .
+    subsort Chunk < PartialChunks .
+    op empty-partial-chunks : -> PartialChunks [ctor] .
+    op _,pc_ : PartialChunks PartialChunks -> PartialChunks [ctor assoc id: empty-partial-chunks] .
+    op chunk-ids-to-partial-chunks : ChunkIds -> PartialChunks .
+    eq chunk-ids-to-partial-chunks(CHUNKID ,ci CHUNKIDS) = CHUNKID ,ci chunk-ids-to-partial-chunks(CHUNKIDS) .
+    eq chunk-ids-to-partial-chunks(empty-chunk-ids) = empty-partial-chunks .
+
+    sort PartialFile .
+    op partial-file : FilePath PartialChunks -> PartialFile [ctor] .
+
+    sort PartialFileSet .
+    subsort PartialFile < PartialFileSet .
+    op empty-partial-file-set : -> PartialFileSet [ctor] .
+    op _ _ : PartialFileSet PartialFileSet -> PartialFileSet [ctor assoc comm idem id: empty-partial-file-set] .
+    op update-partial-file-set : PartialFile PartialFileSet -> PartialFileSet .
+    eq update-partial-file-set(partial-file(PATH, PCHUNKS), partial-file(PATH, PCHUNKS2) PFILESET) = update-partial-file-set(partial-file(PATH, PCHUNKS), PFILESET) .
+    eq update-partial-file-set(partial-file(PATH, PCHUNKS), PFILESET) = partial-file(PATH, PCHUNKS) PFILESET [owise] .
+
+    class Client | files-to-read : FilePaths, partial-files : PartialFileSet .
+
+    vars N M : Nat .
+    var PATH : FilePath .
+    var PATHS : FilePaths .
+    var CHUNK : Chunk .
+    var CHUNKID : ChunkId .
+    var CHUNKIDS : ChunkIds .
+    vars PCHUNKS PCHUNKS2 : PartialChunks .
+    var PFILESET : PartialFileSet .
+
+    rl [request-read-file] :
+        < client(N) : Client | files-to-read : PATH ,p PATHS > =>
+        < client(N) : Client | files-to-read : PATHS >
+        (from client(N) to master send client-read-file(PATH)) .
+
+    rl [process-read-file] :
+        (from master to client(N) send master-read-file-reply(PATH, CHUNKIDS))
+        < client(N) : Client | partial-files : PFILESET > =>
+        < client(N) : Client | partial-files : update-partial-file-set(partial-file(PATH, chunk-ids-to-partial-chunks(CHUNKIDS)), PFILESET) > .
+
+    rl [request-chunk-data] :
+        (from master to client(N) send master-chunk-location-reply(CHUNKID, server(M)))
+        < client(N) : Client | partial-files : partial-file(PATH, (PCHUNKS ,pc CHUNKID ,pc PCHUNKS2)) PFILESET > =>
+        < client(N) : Client | >
+        (from client(N) to server(M) send client-chunk-data-request(CHUNKID)) .
+
+    rl [process-chunk-data] :
+        (from server(M) to client(N) send server-chunk-data-reply(CHUNKID, CHUNK))
+        < client(N) : Client | partial-files : partial-file(PATH, (PCHUNKS ,pc CHUNKID ,pc PCHUNKS2)) PFILESET > =>
+        < client(N) : Client | partial-files : update-partial-file-set(partial-file(PATH, (PCHUNKS ,pc CHUNK ,pc PCHUNKS2)), PFILESET) > .
+
+endom

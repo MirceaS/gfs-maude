@@ -12,7 +12,7 @@ mod FILE is
     sort Chunks .
     subsort Chunk < Chunks .
     op empty-chunks : -> Chunks [ctor] .
-    op _,_ : Chunks Chunks -> Chunks [ctor assoc id: empty-chunks] .
+    op _,c_ : Chunks Chunks -> Chunks [ctor assoc id: empty-chunks] .
     var C : Chunks .
 
     sort ChunkId .
@@ -21,7 +21,12 @@ mod FILE is
     sort ChunkIds .
     subsort ChunkId < ChunkIds .
     op empty-chunk-ids : -> ChunkIds [ctor] .
-    op _,_ : ChunkIds ChunkIds -> ChunkIds [ctor assoc id: empty-chunk-ids] .
+    op _,ci_ : ChunkIds ChunkIds -> ChunkIds [ctor assoc id: empty-chunk-ids] .
+
+    sort ChunkIdSet .
+    subsort ChunkId < ChunkIdSet .
+    op empty-chunk-id-set : -> ChunkIdSet [ctor] .
+    op _ _ : ChunkIdSet ChunkIdSet -> ChunkIdSet [ctor assoc comm idem id: empty-chunk-id-set] .
 
     sort File .
     op file : FilePath Chunks -> File [ctor] .
@@ -29,4 +34,9 @@ mod FILE is
     eq file-path(file(P, C)) = P .
     op file-chunks : File -> Chunks .
     eq file-chunks(file(P, C)) = C .
+
+    sort FilePaths .
+    subsort FilePath < FilePaths .
+    op empty-file-paths : -> FilePaths [ctor] .
+    op _,p_ : FilePaths FilePaths -> FilePaths [ctor assoc id: empty-file-paths] .
 endm
