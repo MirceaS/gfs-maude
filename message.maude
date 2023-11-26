@@ -1,0 +1,9 @@
+mod MESSAGE is 
+    ex CONFIGURATION .
+
+    sort MsgBody .
+
+    op heartbeat-master : ChunkId -> MsgBody .
+
+    op from_to_is_ : Oid Oid MsgBody -> Msg [ctor] .
+endm

@@ -1,14 +1,24 @@
-mod SERVER is
+omod SERVER is
+    pr MESSAGE .
     pr NAT .
 
-    sort ChunkSerLoc .
-    subsort Nat < ChunkSerLoc .
+    sort ServerConfig .
+    op empty-server-config : -> ServerConfig [ctor] .
+    op _ _ : ServerConfig ServerConfig -> ServerConfig [ctor assoc comm idem id: empty-server-config] .
+    op server-chunk-record : ChunkId Chunk -> ServerConfig .
 
-    sort ChunkSerLocs .
-    subsort ChunkSerLoc < ChunkSerLocs .
-    op empty-chunk-ser-locs : -> ChunkSerLocs [ctor] .
-    op _,_ : ChunkSerLocs ChunkSerLocs -> ChunkSerLocs [ctor assoc id: empty-chunk-ser-locs] .
+    op server : Nat -> Oid [ctor] .
 
+    class Server | config : ServerConfig .
 
+    var N : Nat .
+    var CHUNKID : ChunkId .
+    var CHUNK : Chunk .
+    var SERVERCONFIG : ServerConfig .
 
-endm
+    rl [heartbeat] :
+        < server(N) : Server | config : SERVERCONFIG server-chunk-record(CHUNKID, CHUNK) > =>
+        < server(N) : Server | config : SERVERCONFIG server-chunk-record(CHUNKID, CHUNK) >
+        (from server(N) to master is heartbeat-master(CHUNKID)) .
+
+endom

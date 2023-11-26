@@ -3,10 +3,21 @@ omod MASTER is
     pr SERVER . 
 
     sort MasterConfig .
-    op master-chunk-locations : ChunkId ChunkSerLocs -> MasterConfig [ctor] .
+    op empty-master-config : -> MasterConfig [ctor] .
+    op _ _ : MasterConfig MasterConfig -> MasterConfig [ctor assoc comm idem id: empty-master-config] .
+    op master-chunk-location : ChunkId Oid -> MasterConfig [ctor] .
     op master-file-registry : FilePath ChunkIds -> MasterConfig [ctor] .
 
+    op master : -> Oid [ctor]
 
+    class Master | config : MasterConfig .
 
-    class Master | file-registry : MasterFileRegistry,  .
+    var N : Nat .
+    var CHUNKID : ChunkId .
+    var MASTERCONFIG : MasterConfig .
+
+    rl [process-heartbeat] :
+        (from server(N) to master is heartbeat-master(CHUNKID))
+        < master : Master | config : MASTERCONFIG > =>
+        < master : Master | config : MASTERCONFIG master-chunk-location(CHUNKID, server(N)) > .
 endom

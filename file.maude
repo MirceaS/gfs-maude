@@ -1,6 +1,5 @@
 mod FILE is
     pr NAT .
-    pr QID .
     pr STRING .
 
     sort FilePath .
