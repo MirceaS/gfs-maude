@@ -1,5 +1,8 @@
+load ./file
+
 mod MESSAGE is 
     ex CONFIGURATION .
+    pr FILE .
 
     sort MsgBody .
 
