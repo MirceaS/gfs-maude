@@ -21,8 +21,11 @@ omod MASTER is
     var CHUNKIDSET : ChunkIdSet .
     var MASTERCONFIG : MasterConfig .
 
+    eq MASTERCONFIG MASTERCONFIG = MASTERCONFIG .
+
     op expand-heartbeat : Oid ChunkIdSet -> MasterConfig .
     eq expand-heartbeat(server(N), CHUNKID CHUNKIDSET) = master-chunk-location(CHUNKID, server(N)) expand-heartbeat(server(N), CHUNKIDSET) .
+    eq expand-heartbeat(server(N), empty-chunk-id-set) = empty-master-config .
 
     rl [process-heartbeat] :
         (from server(N) to master send heartbeat-master(CHUNKIDSET))

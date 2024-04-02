@@ -4,3 +4,52 @@ load ./component
 load ./master
 load ./server
 load ./client
+
+omod SIMULATION1 is
+    pr FILE .
+    pr MESSAGE .
+    pr COMPONENT .
+    pr MASTER .
+    pr SERVER .
+    pr CLIENT .
+
+    op file1 : -> File .
+    eq file1 = file("file1", chunk(1, 2, 3) ,c chunk1(4) ) .
+    op file2 : -> File .
+    eq file2 = file("file2", chunk(5, 6, 7) ,c chunk2(8, 9) ) .
+
+    var CHUNK : Chunk .
+    op chunk-record-builder : Chunk -> ServerConfig .
+    eq chunk-record-builder(CHUNK) = server-chunk-record(chunk-id(CHUNK), CHUNK) .
+
+    op init-config : -> Configuration .
+    eq init-config = 
+        < master : Master | config : master-file-registry("file1", chunk-id(chunk(1, 2, 3)) ,ci chunk-id(chunk1(4))) master-file-registry("file2", chunk-id(chunk(5, 6, 7)) ,ci chunk-id(chunk2(8, 9))) >
+        < server(0) : Server | config : chunk-record-builder(chunk(1, 2, 3)) chunk-record-builder(chunk2(8, 9)) >
+        < server(1) : Server | config : chunk-record-builder(chunk(5, 6, 7)) chunk-record-builder(chunk1(4)) >
+        < client(0) : Client | files-to-read : "file1" , partial-files : empty-partial-file-set >
+        < client(1) : Client | files-to-read : "file2" , partial-files : empty-partial-file-set >
+        .
+endom
+
+*** set trace on .
+
+*** rewrite [100] init-config .
+
+*** search [1] init-config =>* C:Configuration < master : Master | config : master-chunk-location(chunk-id(chunk1(4)), server(1)) REST:MasterConfig > .
+
+*** search [1] init-config =>* C:Configuration (from server(0) to master send heartbeat-master(CI:ChunkIdSet)) (from server(1) to master send heartbeat-master(CI2:ChunkIdSet)) .
+
+
+search [1] init-config =>* C:Configuration < master : Master | config :
+    master-chunk-location(chunk-id(chunk(1, 2, 3)), server(0))
+    master-chunk-location(chunk-id(chunk2(8, 9)), server(0))
+    master-chunk-location(chunk-id(chunk(5, 6, 7)), server(1))
+    master-chunk-location(chunk-id(chunk1(4)), server(1))
+    REST:MasterConfig > .
+
+search [1] init-config =>* C:Configuration
+    < client(0) : Client | files-to-read : empty-file-paths,
+                           partial-files : partial-file("file1", chunk(1, 2, 3) ,pc chunk1(4)) >
+    < client(1) : Client | files-to-read : empty-file-paths,
+                           partial-files : partial-file("file2", chunk(5, 6, 7) ,pc chunk2(8, 9)) > .

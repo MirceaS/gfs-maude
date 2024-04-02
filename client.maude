@@ -11,7 +11,7 @@ omod CLIENT is
     op empty-partial-chunks : -> PartialChunks [ctor] .
     op _,pc_ : PartialChunks PartialChunks -> PartialChunks [ctor assoc id: empty-partial-chunks] .
     op chunk-ids-to-partial-chunks : ChunkIds -> PartialChunks .
-    eq chunk-ids-to-partial-chunks(CHUNKID ,ci CHUNKIDS) = CHUNKID ,ci chunk-ids-to-partial-chunks(CHUNKIDS) .
+    eq chunk-ids-to-partial-chunks(CHUNKID ,ci CHUNKIDS) = CHUNKID ,pc chunk-ids-to-partial-chunks(CHUNKIDS) .
     eq chunk-ids-to-partial-chunks(empty-chunk-ids) = empty-partial-chunks .
 
     sort PartialFile .
@@ -35,6 +35,8 @@ omod CLIENT is
     var CHUNKIDS : ChunkIds .
     vars PCHUNKS PCHUNKS2 : PartialChunks .
     var PFILESET : PartialFileSet .
+
+    eq PFILESET PFILESET = PFILESET .
 
     rl [request-read-file] :
         < client(N) : Client | files-to-read : PATH ,p PATHS > =>

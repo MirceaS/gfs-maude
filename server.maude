@@ -17,6 +17,8 @@ omod SERVER is
     var CHUNK : Chunk .
     var SERVERCONFIG : ServerConfig .
 
+    eq SERVERCONFIG SERVERCONFIG = SERVERCONFIG .
+
     op collect-chunk-ids : ServerConfig -> ChunkIdSet .
     eq collect-chunk-ids(server-chunk-record(CHUNKID, CHUNK) SERVERCONFIG) = CHUNKID collect-chunk-ids(SERVERCONFIG) .
     eq collect-chunk-ids(SERVERCONFIG) = empty-chunk-id-set [owise] .
@@ -28,8 +30,8 @@ omod SERVER is
     
     rl [reply-chunk-data]:
         (from client(N) to server(M) send client-chunk-data-request(CHUNKID))
-        < server(N) : Server | config : server-chunk-record(CHUNKID, CHUNK) SERVERCONFIG > =>
-        < server(N) : Server | >
+        < server(M) : Server | config : server-chunk-record(CHUNKID, CHUNK) SERVERCONFIG > =>
+        < server(M) : Server | >
         (from server(M) to client(N) send server-chunk-data-reply(CHUNKID, CHUNK)) .
 
 
