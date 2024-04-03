@@ -25,8 +25,8 @@ omod SIMULATION1 is
     op init-config : -> Configuration .
     eq init-config = 
         < master : Master | config : master-file-registry("file1", chunk-id(chunk(1, 2, 3)) ,ci chunk-id(chunk1(4))) master-file-registry("file2", chunk-id(chunk(5, 6, 7)) ,ci chunk-id(chunk2(8, 9))) >
-        < server(0) : Server | config : chunk-record-builder(chunk(1, 2, 3)) chunk-record-builder(chunk2(8, 9)) >
-        < server(1) : Server | config : chunk-record-builder(chunk(5, 6, 7)) chunk-record-builder(chunk1(4)) >
+        < server(0) : Server | config : chunk-record-builder(chunk(1, 2, 3)) chunk-record-builder(chunk2(8, 9)), record-limit : 3 >
+        < server(1) : Server | config : chunk-record-builder(chunk(5, 6, 7)) chunk-record-builder(chunk1(4)), record-limit : 3 >
         < client(0) : Client | files-to-read : "file1" , partial-files : empty-partial-file-set >
         < client(1) : Client | files-to-read : "file2" , partial-files : empty-partial-file-set >
         .
