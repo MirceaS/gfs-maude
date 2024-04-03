@@ -13,10 +13,14 @@ mod MESSAGE is
     --- Sent by the Master
     op master-read-file-reply : FilePath ChunkIds -> MsgBody .
     op master-chunk-location-reply : ChunkId Oid -> MsgBody .
+    op master-replicate-request : ChunkId Oid -> MsgBody .
 
     --- Sent by the Server
     op heartbeat-master : ChunkIdSet -> MsgBody .
     op server-chunk-data-reply : ChunkId Chunk -> MsgBody .
+    op server-replicate-request : ChunkId Chunk -> MsgBody .
 
     op from_to_send_ : Oid Oid MsgBody -> Msg [ctor] .
+
+    eq C1:Configuration C1:Configuration = C1:Configuration .
 endm

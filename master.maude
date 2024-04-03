@@ -3,23 +3,24 @@ load ./message
 
 omod MASTER is
     pr COMPONENT .
-    pr MESSAGE . 
+    pr MESSAGE .
 
     sort MasterConfig .
     op empty-master-config : -> MasterConfig [ctor] .
     op _ _ : MasterConfig MasterConfig -> MasterConfig [ctor assoc comm idem id: empty-master-config] .
     op master-chunk-location : ChunkId Oid -> MasterConfig [ctor] .
     op master-file-registry : FilePath ChunkIds -> MasterConfig [ctor] .
+    op known-server : Oid -> MasterConfig [ctor] .
 
     class Master | config : MasterConfig .
 
-    var N : Nat .
+    vars N M : Nat .
     vars OID OID2 : Oid .
     var PATH : FilePath .
     var CHUNKID : ChunkId .
     var CHUNKIDS : ChunkIds .
     var CHUNKIDSET : ChunkIdSet .
-    var MASTERCONFIG : MasterConfig .
+    vars MASTERCONFIG MASTERCONFIG2 : MasterConfig .
 
     eq MASTERCONFIG MASTERCONFIG = MASTERCONFIG .
 
@@ -30,7 +31,7 @@ omod MASTER is
     rl [process-heartbeat] :
         (from server(N) to master send heartbeat-master(CHUNKIDSET))
         < master : Master | config : MASTERCONFIG > =>
-        < master : Master | config : MASTERCONFIG expand-heartbeat(server(N), CHUNKIDSET) > .
+        < master : Master | config : MASTERCONFIG known-server(server(N)) expand-heartbeat(server(N), CHUNKIDSET) > .
 
     op build-chunk-info : Oid ChunkIds MasterConfig -> Configuration .
     eq build-chunk-info(OID, CHUNKID ,ci CHUNKIDS, MASTERCONFIG master-chunk-location(CHUNKID, OID2)) = (from master to OID send master-chunk-location-reply(CHUNKID, OID2)) build-chunk-info(OID, CHUNKIDS, MASTERCONFIG master-chunk-location(CHUNKID, OID2)) .
@@ -42,4 +43,18 @@ omod MASTER is
         < master : Master | >
         (from master to client(N) send master-read-file-reply(PATH, CHUNKIDS))
         build-chunk-info(client(N), CHUNKIDS, MASTERCONFIG) .
+    
+    op clear-non-persistent-memory : MasterConfig -> MasterConfig .
+    eq clear-non-persistent-memory(master-chunk-location(CHUNKID, OID) MASTERCONFIG) = clear-non-persistent-memory(MASTERCONFIG) .
+    eq clear-non-persistent-memory(MASTERCONFIG) = MASTERCONFIG [owise] .
+
+    rl [master-restart] :
+        < master : Master | config : MASTERCONFIG > =>
+        < master : Master | config : clear-non-persistent-memory(MASTERCONFIG)  > .
+
+    crl [master-replicate] :
+        < master : Master | config : known-server(server(M)) master-chunk-location(CHUNKID, server(N)) MASTERCONFIG >
+        =>
+        < master : Master | >
+        (from master to server(N) send master-replicate-request(CHUNKID, server(M))) if N =/= M .
 endom

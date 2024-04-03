@@ -10,6 +10,7 @@ omod SERVER is
     op _ _ : ServerConfig ServerConfig -> ServerConfig [ctor assoc comm idem id: empty-server-config] .
     op server-chunk-record : ChunkId Chunk -> ServerConfig .
 
+    --- Add limit to the number of chunks a server can hold
     class Server | config : ServerConfig .
 
     vars N M : Nat .
@@ -28,11 +29,23 @@ omod SERVER is
         < server(N) : Server | >
         (from server(N) to master send heartbeat-master(collect-chunk-ids(SERVERCONFIG))) .
     
-    rl [reply-chunk-data]:
+    rl [reply-chunk-data] :
         (from client(N) to server(M) send client-chunk-data-request(CHUNKID))
-        < server(M) : Server | config : server-chunk-record(CHUNKID, CHUNK) SERVERCONFIG > =>
+        < server(M) : Server | config : server-chunk-record(CHUNKID, CHUNK) SERVERCONFIG >
+        =>
         < server(M) : Server | >
         (from server(M) to client(N) send server-chunk-data-reply(CHUNKID, CHUNK)) .
 
+    rl [forward-replicate] :
+        (from master to server(N) send master-replicate-request(CHUNKID, server(M)))
+        < server(N) : Server | config : server-chunk-record(CHUNKID, CHUNK) SERVERCONFIG >
+        =>
+        < server(N) : Server | >
+        (from server(N) to server(M) send server-replicate-request(CHUNKID, CHUNK)) .
 
+    rl [server-replicate] :
+        (from server(M) to server(N) send server-replicate-request(CHUNKID, CHUNK))
+        < server(N) : Server | config : SERVERCONFIG >
+        =>
+        < server(N) : Server | config : server-chunk-record(CHUNKID, CHUNK) SERVERCONFIG > .
 endom
