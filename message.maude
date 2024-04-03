@@ -21,6 +21,4 @@ mod MESSAGE is
     op server-replicate-request : ChunkId Chunk -> MsgBody .
 
     op from_to_send_ : Oid Oid MsgBody -> Msg [ctor] .
-
-    eq C1:Configuration C1:Configuration = C1:Configuration .
 endm

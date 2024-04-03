@@ -8,7 +8,7 @@ omod SERVER is
     sort ServerConfig .
     op empty-server-config : -> ServerConfig [ctor] .
     op _ _ : ServerConfig ServerConfig -> ServerConfig [ctor assoc comm idem id: empty-server-config] .
-    op server-chunk-record : ChunkId Chunk -> ServerConfig .
+    op server-chunk-record : ChunkId Chunk -> ServerConfig [ctor] .
 
     class Server | config : ServerConfig, record-limit : Nat .
 

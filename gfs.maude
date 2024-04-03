@@ -40,6 +40,7 @@ endom
 
 *** search [1] init-config =>* C:Configuration (from server(0) to master send heartbeat-master(CI:ChunkIdSet)) (from server(1) to master send heartbeat-master(CI2:ChunkIdSet)) .
 
+*** Master can learn about all initial chunk locations
 search [1, 4] init-config =>* C:Configuration < master : Master | config :
     master-chunk-location(chunk-id(chunk(1, 2, 3)), server(0))
     master-chunk-location(chunk-id(chunk2(8, 9)), server(0))
@@ -47,8 +48,21 @@ search [1, 4] init-config =>* C:Configuration < master : Master | config :
     master-chunk-location(chunk-id(chunk1(4)), server(1))
     REST:MasterConfig > .
 
+*** Clients can fully read their desired files
+*** NOTE: To run this search, remove rule `master-replicate`
+***(
 search [1, 22] init-config =>* C:Configuration
     < client(0) : Client | files-to-read : empty-file-paths,
                            partial-files : partial-file("file1", chunk(1, 2, 3) ,pc chunk1(4)) >
     < client(1) : Client | files-to-read : empty-file-paths,
-                           partial-files : partial-file("file2", chunk(5, 6, 7) ,pc chunk2(8, 9)) > .
+                           partial-files : partial-file("file2", chunk(5, 6, 7) ,pc chunk2(8, 9)) >
+                           .
+)
+
+*** Chunks can be replicated across multiple servers
+*** NOTE: To run this search, remove the client rules
+***(
+search [1, 10] init-config =>* C:Configuration
+    < server(0) : Server | config : server-chunk-record(chunk-id(chunk(1, 2, 3)), chunk(1, 2, 3)) server-chunk-record(chunk-id(chunk2(8, 9)), chunk2(8, 9)) server-chunk-record(chunk-id(chunk(5, 6, 7)), chunk(5, 6, 7)), record-limit : 3 >
+    < server(1) : Server | config : server-chunk-record(chunk-id(chunk(5, 6, 7)), chunk(5, 6, 7)) server-chunk-record(chunk-id(chunk1(4)), chunk1(4)) server-chunk-record(chunk-id(chunk2(8, 9)), chunk2(8, 9)), record-limit : 3 > .
+)
