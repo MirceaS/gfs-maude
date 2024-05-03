@@ -17,8 +17,8 @@ mod MESSAGE is
 
     --- Sent by the Server
     op heartbeat-master : ChunkIdSet -> MsgBody .
-    op server-chunk-data-reply : ChunkId Chunk -> MsgBody .
-    op server-replicate-request : ChunkId Chunk -> MsgBody .
+    op server-chunk-data-reply : Chunk -> MsgBody .
+    op server-replicate-request : Chunk -> MsgBody .
 
     op from_to_send_ : Oid Oid MsgBody -> Msg [ctor] .
 endm

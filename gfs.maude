@@ -14,19 +14,15 @@ omod SIMULATION1 is
     pr CLIENT .
 
     op file1 : -> File .
-    eq file1 = file("file1", chunk(1, 2, 3) ,c chunk1(4) ) .
+    eq file1 = file("file1", chunk(0, chunk3(1, 2, 3)) ,c chunk(1, chunk1(4)) ) .
     op file2 : -> File .
-    eq file2 = file("file2", chunk(5, 6, 7) ,c chunk2(8, 9) ) .
-
-    var CHUNK : Chunk .
-    op chunk-record-builder : Chunk -> ServerConfig .
-    eq chunk-record-builder(CHUNK) = server-chunk-record(chunk-id(CHUNK), CHUNK) .
+    eq file2 = file("file2", chunk(2, chunk3(5, 6, 7)) ,c chunk(3, chunk2(8, 9)) ) .
 
     op init-config : -> Configuration .
     eq init-config = 
-        < master : Master | config : master-file-registry("file1", chunk-id(chunk(1, 2, 3)) ,ci chunk-id(chunk1(4))) master-file-registry("file2", chunk-id(chunk(5, 6, 7)) ,ci chunk-id(chunk2(8, 9))) >
-        < server(0) : Server | config : chunk-record-builder(chunk(1, 2, 3)) chunk-record-builder(chunk2(8, 9)), record-limit : 3 >
-        < server(1) : Server | config : chunk-record-builder(chunk(5, 6, 7)) chunk-record-builder(chunk1(4)), record-limit : 3 >
+        < master : Master | config : master-file-registry("file1", 0 ,ci 1) master-file-registry("file2", 2 ,ci 3) >
+        < server(0) : Server | config : server-chunk-record(chunk(0, chunk3(1, 2, 3))) server-chunk-record(chunk(3, chunk2(8, 9))), record-limit : 3 >
+        < server(1) : Server | config : server-chunk-record(chunk(2, chunk3(5, 6, 7))) server-chunk-record(chunk(1, chunk1(4))), record-limit : 3 >
         < client(0) : Client | files-to-read : "file1" , partial-files : empty-partial-file-set >
         < client(1) : Client | files-to-read : "file2" , partial-files : empty-partial-file-set >
         .
@@ -42,10 +38,10 @@ endom
 
 *** Master can learn about all initial chunk locations
 search [1, 4] init-config =>* C:Configuration < master : Master | config :
-    master-chunk-location(chunk-id(chunk(1, 2, 3)), server(0))
-    master-chunk-location(chunk-id(chunk2(8, 9)), server(0))
-    master-chunk-location(chunk-id(chunk(5, 6, 7)), server(1))
-    master-chunk-location(chunk-id(chunk1(4)), server(1))
+    master-chunk-location(0, server(0))
+    master-chunk-location(3, server(0))
+    master-chunk-location(2, server(1))
+    master-chunk-location(1, server(1))
     REST:MasterConfig > .
 
 *** Clients can fully read their desired files
@@ -53,9 +49,9 @@ search [1, 4] init-config =>* C:Configuration < master : Master | config :
 ***(
 search [1, 22] init-config =>* C:Configuration
     < client(0) : Client | files-to-read : empty-file-paths,
-                           partial-files : partial-file("file1", chunk(1, 2, 3) ,pc chunk1(4)) >
+                           partial-files : partial-file("file1", chunk3(1, 2, 3) ,pc chunk1(4)) >
     < client(1) : Client | files-to-read : empty-file-paths,
-                           partial-files : partial-file("file2", chunk(5, 6, 7) ,pc chunk2(8, 9)) >
+                           partial-files : partial-file("file2", chunk3(5, 6, 7) ,pc chunk2(8, 9)) >
                            .
 )
 
@@ -63,6 +59,6 @@ search [1, 22] init-config =>* C:Configuration
 *** NOTE: To run this search, remove the client rules
 ***(
 search [1, 10] init-config =>* C:Configuration
-    < server(0) : Server | config : server-chunk-record(chunk-id(chunk(1, 2, 3)), chunk(1, 2, 3)) server-chunk-record(chunk-id(chunk2(8, 9)), chunk2(8, 9)) server-chunk-record(chunk-id(chunk(5, 6, 7)), chunk(5, 6, 7)), record-limit : 3 >
-    < server(1) : Server | config : server-chunk-record(chunk-id(chunk(5, 6, 7)), chunk(5, 6, 7)) server-chunk-record(chunk-id(chunk1(4)), chunk1(4)) server-chunk-record(chunk-id(chunk2(8, 9)), chunk2(8, 9)), record-limit : 3 > .
+    < server(0) : Server | config : server-chunk-record(chunk(0, chunk3(1, 2, 3))) server-chunk-record(chunk(3, chunk2(8, 9))) server-chunk-record(chunk(2, chunk3(5, 6, 7))), record-limit : 3 >
+    < server(1) : Server | config : server-chunk-record(chunk(2, chunk3(5, 6, 7))) server-chunk-record(chunk(1, chunk1(4))) server-chunk-record(chunk(3, chunk2(8, 9))), record-limit : 3 > .
 )

@@ -11,28 +11,41 @@ mod FILE is
     op padding : -> Region [ctor] .
     vars R1 R2 R3 : Region .
 
+    sort ChunkId .
+    subsort Nat < ChunkId .
+
     --- We assume that chunks are made up of 3 regions.
     --- We chose 3 only because it's a small number that
     --- still allows us to capture interesting behaviours
     --- of overlapping writes.
-    sort Chunk .
-    op chunk1 : Region -> Chunk [ctor] .
-    op chunk2 : Region Region -> Chunk [ctor] .
-    op chunk : Region Region Region -> Chunk [ctor] .
+    sort ChunkContent .
+    op chunk0 : -> ChunkContent [ctor] .
+    op chunk1 : Region -> ChunkContent [ctor] .
+    op chunk2 : Region Region -> ChunkContent [ctor] .
+    op chunk3 : Region Region Region -> ChunkContent [ctor] .
 
-    op chunk-len : Chunk -> Nat .
+    op chunk-len : ChunkContent -> Nat .
+    eq chunk-len(chunk0) = 0 .
     eq chunk-len(chunk1(R1)) = 1 .
     eq chunk-len(chunk2(R1, R2)) = 2 .
-    eq chunk-len(chunk(R1, R2, R3)) = 3 .
+    eq chunk-len(chunk3(R1, R2, R3)) = 3 .
+
+    sort Chunk .
+    op chunk : ChunkId ChunkContent -> Chunk [ctor] .
+
+    var CHUNKID : ChunkId .
+    var CHUNKC : ChunkContent .
+    op chunk-id : Chunk -> ChunkId .
+    eq chunk-id(chunk(CHUNKID, CHUNKC)) = CHUNKID .
+    op chunk-content : Chunk -> ChunkContent .
+    eq chunk-content(chunk(CHUNKID, CHUNKC)) = CHUNKC .
+
 
     sort Chunks .
     subsort Chunk < Chunks .
     op empty-chunks : -> Chunks [ctor] .
     op _,c_ : Chunks Chunks -> Chunks [ctor assoc id: empty-chunks] .
     var CS : Chunks .
-
-    sort ChunkId .
-    op chunk-id : Chunk -> ChunkId .
 
     sort ChunkIds .
     subsort ChunkId < ChunkIds .

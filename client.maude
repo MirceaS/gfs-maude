@@ -7,7 +7,7 @@ omod CLIENT is
 
     sort PartialChunks .
     subsort ChunkId < PartialChunks .
-    subsort Chunk < PartialChunks .
+    subsort ChunkContent < PartialChunks .
     op empty-partial-chunks : -> PartialChunks [ctor] .
     op _,pc_ : PartialChunks PartialChunks -> PartialChunks [ctor assoc id: empty-partial-chunks] .
     op chunk-ids-to-partial-chunks : ChunkIds -> PartialChunks .
@@ -30,7 +30,7 @@ omod CLIENT is
     vars N M : Nat .
     var PATH : FilePath .
     var PATHS : FilePaths .
-    var CHUNK : Chunk .
+    var CHUNKC : ChunkContent .
     var CHUNKID : ChunkId .
     var CHUNKIDS : ChunkIds .
     vars PCHUNKS PCHUNKS2 : PartialChunks .
@@ -55,8 +55,8 @@ omod CLIENT is
         (from client(N) to server(M) send client-chunk-data-request(CHUNKID)) .
 
     rl [process-chunk-data] :
-        (from server(M) to client(N) send server-chunk-data-reply(CHUNKID, CHUNK))
+        (from server(M) to client(N) send server-chunk-data-reply(chunk(CHUNKID, CHUNKC)))
         < client(N) : Client | partial-files : partial-file(PATH, (PCHUNKS ,pc CHUNKID ,pc PCHUNKS2)) PFILESET > =>
-        < client(N) : Client | partial-files : update-partial-file-set(partial-file(PATH, (PCHUNKS ,pc CHUNK ,pc PCHUNKS2)), PFILESET) > .
+        < client(N) : Client | partial-files : update-partial-file-set(partial-file(PATH, (PCHUNKS ,pc CHUNKC ,pc PCHUNKS2)), PFILESET) > .
 
 endom

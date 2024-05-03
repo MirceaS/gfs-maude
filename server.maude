@@ -8,27 +8,28 @@ omod SERVER is
     sort ServerConfig .
     op empty-server-config : -> ServerConfig [ctor] .
     op _ _ : ServerConfig ServerConfig -> ServerConfig [ctor assoc comm idem id: empty-server-config] .
-    op server-chunk-record : ChunkId Chunk -> ServerConfig [ctor] .
+    op server-chunk-record : Chunk -> ServerConfig [ctor] .
 
     class Server | config : ServerConfig, record-limit : Nat .
 
     vars N M NN : Nat .
     var CHUNKID : ChunkId .
+    var CHUNKC : ChunkContent .
     var CHUNK : Chunk .
     var SERVERCONFIG : ServerConfig .
 
     eq SERVERCONFIG SERVERCONFIG = SERVERCONFIG .
 
     op del-record : ServerConfig ServerConfig -> ServerConfig .
-    eq del-record(server-chunk-record(CHUNKID, CHUNK), server-chunk-record(CHUNKID, CHUNK) SERVERCONFIG) =
-        del-record(server-chunk-record(CHUNKID, CHUNK), SERVERCONFIG) .
-    eq del-record(server-chunk-record(CHUNKID, CHUNK), SERVERCONFIG) = SERVERCONFIG [owise] .
+    eq del-record(server-chunk-record(CHUNK), server-chunk-record(CHUNK) SERVERCONFIG) =
+        del-record(server-chunk-record(CHUNK), SERVERCONFIG) .
+    eq del-record(server-chunk-record(CHUNK), SERVERCONFIG) = SERVERCONFIG [owise] .
     op count-records : ServerConfig -> Nat .
     eq count-records(empty-server-config) = 0 .
-    eq count-records(server-chunk-record(CHUNKID, CHUNK) SERVERCONFIG) = 1 + count-records(del-record(server-chunk-record(CHUNKID, CHUNK), SERVERCONFIG)) .
+    eq count-records(server-chunk-record(CHUNK) SERVERCONFIG) = 1 + count-records(del-record(server-chunk-record(CHUNK), SERVERCONFIG)) .
 
     op collect-chunk-ids : ServerConfig -> ChunkIdSet .
-    eq collect-chunk-ids(server-chunk-record(CHUNKID, CHUNK) SERVERCONFIG) = CHUNKID collect-chunk-ids(SERVERCONFIG) .
+    eq collect-chunk-ids(server-chunk-record(CHUNK) SERVERCONFIG) = chunk-id(CHUNK) collect-chunk-ids(SERVERCONFIG) .
     eq collect-chunk-ids(SERVERCONFIG) = empty-chunk-id-set [owise] .
 
     rl [heartbeat] :
@@ -36,23 +37,23 @@ omod SERVER is
         < server(N) : Server | >
         (from server(N) to master send heartbeat-master(collect-chunk-ids(SERVERCONFIG))) .
     
-    rl [reply-chunk-data] :
+    crl [reply-chunk-data] :
         (from client(N) to server(M) send client-chunk-data-request(CHUNKID))
-        < server(M) : Server | config : server-chunk-record(CHUNKID, CHUNK) SERVERCONFIG >
+        < server(M) : Server | config : server-chunk-record(CHUNK) SERVERCONFIG >
         =>
         < server(M) : Server | >
-        (from server(M) to client(N) send server-chunk-data-reply(CHUNKID, CHUNK)) .
+        (from server(M) to client(N) send server-chunk-data-reply(CHUNK)) if CHUNKID = chunk-id(CHUNK) .
 
     rl [forward-replicate] :
         (from master to server(N) send master-replicate-request(CHUNKID, server(M)))
-        < server(N) : Server | config : server-chunk-record(CHUNKID, CHUNK) SERVERCONFIG >
+        < server(N) : Server | config : server-chunk-record(CHUNK) SERVERCONFIG >
         =>
         < server(N) : Server | >
-        (from server(N) to server(M) send server-replicate-request(CHUNKID, CHUNK)) .
+        (from server(N) to server(M) send server-replicate-request(CHUNK)) .
 
     crl [server-replicate] :
-        (from server(M) to server(N) send server-replicate-request(CHUNKID, CHUNK))
+        (from server(M) to server(N) send server-replicate-request(CHUNK))
         < server(N) : Server | config : SERVERCONFIG, record-limit : NN >
         =>
-        < server(N) : Server | config : server-chunk-record(CHUNKID, CHUNK) SERVERCONFIG > if count-records(SERVERCONFIG) < NN .
+        < server(N) : Server | config : server-chunk-record(CHUNK) SERVERCONFIG > if count-records(SERVERCONFIG) < NN .
 endom
